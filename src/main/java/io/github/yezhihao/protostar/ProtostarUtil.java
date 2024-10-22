@@ -136,7 +136,7 @@ public class ProtostarUtil {
         }
     }
 
-    private static final int[] ALL = {Integer.MAX_VALUE};
+    private static final int[] ALL = { 0 };
 
     private static int[] getVersions(Field field, int[] def) {
         int[] result = field.version();
