@@ -2,6 +2,7 @@ package io.github.yezhihao.protostar;
 
 import io.github.yezhihao.protostar.annotation.CustomMessage;
 import io.github.yezhihao.protostar.annotation.Message;
+import io.github.yezhihao.protostar.schema.CustomRuntimeSchema;
 import io.github.yezhihao.protostar.schema.RuntimeSchema;
 import io.github.yezhihao.protostar.util.ArrayMap;
 import io.github.yezhihao.protostar.util.ClassUtils;
@@ -21,7 +22,7 @@ public class SchemaManager {
 
     private final Map<String, ArrayMap<RuntimeSchema>> typeClassMapping;
 
-    private final Map<Integer, Class<?>> CustomTypeMapping;
+    private final Map<Integer, CustomRuntimeSchema> CustomTypeMapping;
 
     public SchemaManager() {
         this(128);
@@ -54,7 +55,7 @@ public class SchemaManager {
                 if (customMessage!= null) {
                     int[] values = customMessage.value();
                     for (Integer typeId : values)
-                        CustomTypeMapping.put(typeId, type);
+                        CustomTypeMapping.put(typeId, new CustomRuntimeSchema(type));
                 }
             }
         }
@@ -85,7 +86,7 @@ public class SchemaManager {
         return typeIdMapping.get(typeId);
     }
 
-    public Class<?> getCustomType(Integer typeId) {
+    public CustomRuntimeSchema getCustomType(Integer typeId) {
         return CustomTypeMapping.get(typeId);
     }
 }
