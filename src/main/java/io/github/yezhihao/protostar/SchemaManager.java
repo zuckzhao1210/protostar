@@ -1,5 +1,6 @@
 package io.github.yezhihao.protostar;
 
+import io.github.yezhihao.protostar.annotation.CustomMessage;
 import io.github.yezhihao.protostar.annotation.Message;
 import io.github.yezhihao.protostar.schema.RuntimeSchema;
 import io.github.yezhihao.protostar.util.ArrayMap;
@@ -20,6 +21,8 @@ public class SchemaManager {
 
     private final Map<String, ArrayMap<RuntimeSchema>> typeClassMapping;
 
+    private final Map<Integer, Class<?>> CustomTypeMapping;
+
     public SchemaManager() {
         this(128);
     }
@@ -27,6 +30,7 @@ public class SchemaManager {
     public SchemaManager(int initialCapacity) {
         this.typeIdMapping = new HashMap<>(initialCapacity);
         this.typeClassMapping = new HashMap<>(initialCapacity);
+        this.CustomTypeMapping = new HashMap<>(initialCapacity);
     }
 
     public SchemaManager(String... basePackages) {
@@ -43,6 +47,14 @@ public class SchemaManager {
                     int[] values = message.value();
                     for (Integer typeId : values)
                         loadRuntimeSchema(typeId, type);
+                    break;
+                }
+                // 扫描注册自定义的消息类型
+                CustomMessage customMessage = type.getAnnotation(CustomMessage.class);
+                if (customMessage!= null) {
+                    int[] values = customMessage.value();
+                    for (Integer typeId : values)
+                        CustomTypeMapping.put(typeId, type);
                 }
             }
         }
@@ -71,5 +83,9 @@ public class SchemaManager {
 
     public ArrayMap<RuntimeSchema> getRuntimeSchema(Integer typeId) {
         return typeIdMapping.get(typeId);
+    }
+
+    public Class<?> getCustomType(Integer typeId) {
+        return CustomTypeMapping.get(typeId);
     }
 }
