@@ -48,7 +48,7 @@ public class SchemaManager {
                     int[] values = message.value();
                     for (Integer typeId : values)
                         loadRuntimeSchema(typeId, type);
-                    break;
+                    continue;
                 }
                 // 扫描注册自定义的消息类型
                 CustomMessage customMessage = type.getAnnotation(CustomMessage.class);
