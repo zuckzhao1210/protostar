@@ -52,7 +52,7 @@ public class SchemaManager {
                 }
                 // 扫描注册自定义的消息类型
                 CustomMessage customMessage = type.getAnnotation(CustomMessage.class);
-                if (customMessage!= null) {
+                if (customMessage != null) {
                     int[] values = customMessage.value();
                     for (Integer typeId : values)
                         CustomTypeMapping.put(typeId, new CustomRuntimeSchema(type));

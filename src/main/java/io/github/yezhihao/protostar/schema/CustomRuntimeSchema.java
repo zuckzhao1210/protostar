@@ -1,9 +1,11 @@
 package io.github.yezhihao.protostar.schema;
 
 import io.github.yezhihao.protostar.Schema;
+import io.github.yezhihao.protostar.util.Explain;
 import io.netty.buffer.ByteBuf;
 
 import java.lang.reflect.Constructor;
+import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 
 /**
@@ -15,7 +17,7 @@ public class CustomRuntimeSchema<T> implements Schema<T> {
     protected Class<T> typeClass;
     protected Constructor<T> constructor;
     protected Method decoder;
-    protected Method encoder;
+    // protected Method encoder;
 
     public CustomRuntimeSchema(Class<T> typeClass) {
         this.typeClass = typeClass;
@@ -23,7 +25,7 @@ public class CustomRuntimeSchema<T> implements Schema<T> {
             this.constructor = typeClass.getDeclaredConstructor((Class[]) null);
             this.constructor.setAccessible(true);
             this.decoder = typeClass.getDeclaredMethod("decode", ByteBuf.class);
-            this.encoder = typeClass.getDeclaredMethod("encode");
+            // this.encoder = typeClass.getDeclaredMethod("encode");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -37,13 +39,43 @@ public class CustomRuntimeSchema<T> implements Schema<T> {
         }
     }
 
+    public T mergeFrom(ByteBuf input, T result) {
+        if (!input.isReadable()) {
+            return null;
+        }
+        try {
+            decoder.invoke(result, input);
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException("Merge message failed " + typeClass.getName(), e);
+        }
+        return result;
+    }
+
+    public T mergeFrom(ByteBuf input, T result, Explain explain) {
+        if (!input.isReadable()) {
+            return null;
+        }
+        try {
+            if (explain == null)
+                return mergeFrom(input, result);
+            decoder.invoke(result, input);
+        } catch (InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException("Merge message failed " + typeClass.getName(), e);
+        }
+        return result;
+    }
+
+
     @Override
     public T readFrom(ByteBuf input) {
-        T message = this.newInstance();
+        if (!input.isReadable())
+            return null;
+        T message;
         try {
+            message = this.newInstance();
             decoder.invoke(message, input);
         } catch ( IllegalAccessException | IllegalArgumentException | java.lang.reflect.InvocationTargetException e) {
-            throw new RuntimeException("readFrom failed " + typeClass.getName(), e);
+            throw new RuntimeException("ReadFrom failed " + typeClass.getName(), e);
         }
         return message;
     }
