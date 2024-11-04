@@ -17,15 +17,15 @@ public class CustomRuntimeSchema<T> implements Schema<T> {
     protected Class<T> typeClass;
     protected Constructor<T> constructor;
     protected Method decoder;
-    // protected Method encoder;
+    protected Method encoder;
 
     public CustomRuntimeSchema(Class<T> typeClass) {
         this.typeClass = typeClass;
         try {
             this.constructor = typeClass.getDeclaredConstructor((Class[]) null);
             this.constructor.setAccessible(true);
-            this.decoder = typeClass.getDeclaredMethod("decode", ByteBuf.class);
-            // this.encoder = typeClass.getDeclaredMethod("encode");
+            this.decoder = typeClass.getMethod("decode", ByteBuf.class);
+            this.encoder = typeClass.getMethod("encode");
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
@@ -82,6 +82,28 @@ public class CustomRuntimeSchema<T> implements Schema<T> {
 
     @Override
     public void writeTo(ByteBuf output, T value) {
+        if (value == null)
+            return;
+        try {
+            encoder.invoke(value);
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            throw new RuntimeException("WriteTo failed " + typeClass.getName(), e);
+        }
+    }
+
+    @Override
+    public void writeTo(ByteBuf output, T value, Explain explain) {
+        if (value == null)
+            return;
+        if (explain == null) {
+            writeTo(output, value);
+            return;
+        }
+        try {
+            encoder.invoke(value);
+        } catch (IllegalAccessException | IllegalArgumentException | InvocationTargetException e) {
+            throw new RuntimeException("WriteTo failed " + typeClass.getName(), e);
+        }
     }
 
     public Class<T> typeClass() {
